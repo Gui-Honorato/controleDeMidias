@@ -260,6 +260,26 @@ def download(tipo, nome):
 
     return "Arquivo não encontrado", 404
 
+@app.route("/stop")
+def stop():
+
+    conn = sqlite3.connect("banco.db")
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM comandos")
+
+    cursor.execute(
+        "INSERT INTO comandos (acao, arquivo) VALUES (?, ?)",
+        ("stop", "")
+    )
+
+    conn.commit()
+    conn.close()
+
+    flash("Comando de parada enviado.")
+
+    return redirect("/")
+
 if __name__ == "__main__":
 
     init_db()
