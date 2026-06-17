@@ -1,13 +1,47 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 import sqlite3
 import os
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = "uploads"
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.secret_key = "sua_chave_secreta"
 
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# Limite de 500 MB
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024
+
+VIDEO_FOLDER = "uploads/videos"
+IMAGE_FOLDER = "uploads/imagens"
+
+os.makedirs(VIDEO_FOLDER, exist_ok=True)
+os.makedirs(IMAGE_FOLDER, exist_ok=True)
+
+ALLOWED_EXTENSIONS = {
+    "mp4",
+    "mov",
+    "avi",
+    "mkv",
+    "webm",
+    "jpg",
+    "jpeg",
+    "png",
+    "gif"
+}
+
+
+def allowed_file(filename):
+    return (
+        "." in filename
+        and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+    )
+
+
+def get_file_type(filename):
+    ext = filename.rsplit(".", 1)[1].lower()
+
+    if ext in ["mp4", "mov", "avi", "mkv", "webm"]:
+        return "video"
+
+    return "imagem"
 
 
 def init_db():
@@ -15,9 +49,10 @@ def init_db():
     cursor = conn.cursor()
 
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS videos (
+        CREATE TABLE IF NOT EXISTS arquivos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT NOT NULL
+            nome TEXT NOT NULL,
+            tipo TEXT NOT NULL
         )
     """)
 
@@ -31,38 +66,58 @@ def index():
     conn = sqlite3.connect("banco.db")
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM videos")
-    videos = cursor.fetchall()
+    cursor.execute("SELECT * FROM arquivos ORDER BY id DESC")
+    arquivos = cursor.fetchall()
 
     conn.close()
 
-    return render_template("index.html", videos=videos)
+    return render_template("index.html", arquivos=arquivos)
 
 
 @app.route("/upload", methods=["POST"])
 def upload():
 
-    arquivo = request.files["video"]
+    if "arquivo" not in request.files:
+        flash("Nenhum arquivo enviado.")
+        return redirect(url_for("index"))
 
-    if arquivo:
+    arquivo = request.files["arquivo"]
 
+    if arquivo.filename == "":
+        flash("Nenhum arquivo selecionado.")
+        return redirect(url_for("index"))
+
+    if not allowed_file(arquivo.filename):
+        flash("Formato não permitido.")
+        return redirect(url_for("index"))
+
+    tipo = get_file_type(arquivo.filename)
+
+    if tipo == "video":
         caminho = os.path.join(
-            app.config["UPLOAD_FOLDER"],
+            VIDEO_FOLDER,
+            arquivo.filename
+        )
+    else:
+        caminho = os.path.join(
+            IMAGE_FOLDER,
             arquivo.filename
         )
 
-        arquivo.save(caminho)
+    arquivo.save(caminho)
 
-        conn = sqlite3.connect("banco.db")
-        cursor = conn.cursor()
+    conn = sqlite3.connect("banco.db")
+    cursor = conn.cursor()
 
-        cursor.execute(
-            "INSERT INTO videos(nome) VALUES(?)",
-            (arquivo.filename,)
-        )
+    cursor.execute(
+        "INSERT INTO arquivos(nome, tipo) VALUES(?, ?)",
+        (arquivo.filename, tipo)
+    )
 
-        conn.commit()
-        conn.close()
+    conn.commit()
+    conn.close()
+
+    flash("Upload realizado com sucesso!")
 
     return redirect(url_for("index"))
 
@@ -74,31 +129,41 @@ def delete(id):
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT nome FROM videos WHERE id=?",
+        "SELECT nome, tipo FROM arquivos WHERE id=?",
         (id,)
     )
 
-    video = cursor.fetchone()
+    arquivo = cursor.fetchone()
 
-    if video:
+    if arquivo:
 
-        arquivo = os.path.join(
-            app.config["UPLOAD_FOLDER"],
-            video[0]
+        nome, tipo = arquivo
+
+        pasta = VIDEO_FOLDER if tipo == "video" else IMAGE_FOLDER
+
+        caminho = os.path.join(
+            pasta,
+            nome
         )
 
-        if os.path.exists(arquivo):
-            os.remove(arquivo)
+        if os.path.exists(caminho):
+            os.remove(caminho)
 
-    cursor.execute(
-        "DELETE FROM videos WHERE id=?",
-        (id,)
-    )
+        cursor.execute(
+            "DELETE FROM arquivos WHERE id=?",
+            (id,)
+        )
 
-    conn.commit()
+        conn.commit()
+
     conn.close()
 
-    return redirect(url_for("templates/index.html"))
+    return redirect(url_for("index"))
+
+
+@app.errorhandler(413)
+def arquivo_grande(e):
+    return "Arquivo maior que 500 MB.", 413
 
 
 if __name__ == "__main__":
@@ -107,5 +172,6 @@ if __name__ == "__main__":
 
     app.run(
         host="0.0.0.0",
-        port=5000
+        port=5000,
+        debug=True
     )
