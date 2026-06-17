@@ -10,13 +10,16 @@
 <h1>Painel de Vídeos</h1>
 
 <form action="/upload" method="post" enctype="multipart/form-data">
-
-    <input type="file" name="video">
+    <input
+        type="file"
+        name="arquivo"
+        accept="video/*,image/*"
+        required
+    >
 
     <button type="submit">
         Enviar
     </button>
-
 </form>
 
 <hr>
