@@ -25,21 +25,18 @@
 <hr>
 
 <ul>
+{% for arquivo in arquivos %}
 
-{% for video in videos %}
+    <li>
+        {{ arquivo[1] }}
+        ({{ arquivo[2] }})
 
-<li>
-
-    {{ video[1] }}
-
-    <a href="/delete/{{ video[0] }}">
-        Excluir
-    </a>
-
-</li>
+        <a href="/delete/{{ arquivo[0] }}">
+            Excluir
+        </a>
+    </li>
 
 {% endfor %}
-
 </ul>
 
 </body>
