@@ -98,7 +98,7 @@ def delete(id):
     conn.commit()
     conn.close()
 
-    return redirect(url_for("index"))
+    return redirect(url_for("index.html"))
 
 
 if __name__ == "__main__":
