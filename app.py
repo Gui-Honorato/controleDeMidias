@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import send_from_directory
 import sqlite3
 import os
 
@@ -172,6 +173,7 @@ def delete(id):
 def arquivo_grande(e):
     return "Arquivo maior que 500 MB.", 413
 
+# Rota para comando de reproduzir midia na TV
 @app.route("/play/<int:id>")
 def play(id):
 
@@ -201,31 +203,62 @@ def play(id):
     flash("Comando enviado para a TV.")
 
     return redirect("/")
-
+# Comando para criar a API de comando para reproduzir midia na TV
 @app.route("/api/comando")
 def api_comando():
 
     conn = sqlite3.connect("banco.db")
     cursor = conn.cursor()
 
-    cursor.execute(
-        "SELECT acao, arquivo FROM comandos ORDER BY id DESC LIMIT 1"
-    )
+    cursor.execute("""
+        SELECT acao, arquivo
+        FROM comandos
+        ORDER BY id DESC
+        LIMIT 1
+    """)
 
     comando = cursor.fetchone()
 
     conn.close()
 
-    if comando:
-
+    if not comando:
         return jsonify({
-            "acao": comando[0],
-            "arquivo": comando[1]
+            "acao": "nenhuma"
         })
 
+    arquivo = comando[1]
+
+    extensao = arquivo.rsplit(".", 1)[1].lower()
+
+    if extensao in ["mp4", "avi", "mov", "mkv", "webm"]:
+        tipo = "video"
+    else:
+        tipo = "imagem"
+
     return jsonify({
-        "acao": "nenhuma"
+        "acao": comando[0],
+        "arquivo": arquivo,
+        "tipo": tipo
     })
+
+@app.route("/download/<tipo>/<nome>")
+def download(tipo, nome):
+
+    if tipo == "video":
+        return send_from_directory(
+            VIDEO_FOLDER,
+            nome,
+            as_attachment=True
+        )
+
+    if tipo == "imagem":
+        return send_from_directory(
+            IMAGE_FOLDER,
+            nome,
+            as_attachment=True
+        )
+
+    return "Arquivo não encontrado", 404
 
 if __name__ == "__main__":
 
