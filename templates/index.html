@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Painel TV</title>
+</head>
+
+<body>
+
+<h1>Painel de Vídeos</h1>
+
+<form action="/upload" method="post" enctype="multipart/form-data">
+
+    <input type="file" name="video">
+
+    <button type="submit">
+        Enviar
+    </button>
+
+</form>
+
+<hr>
+
+<ul>
+
+{% for video in videos %}
+
+<li>
+
+    {{ video[1] }}
+
+    <a href="/delete/{{ video[0] }}">
+        Excluir
+    </a>
+
+</li>
+
+{% endfor %}
+
+</ul>
+
+</body>
+
+</html>
