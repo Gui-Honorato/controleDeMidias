@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 import sqlite3
 import os
 
@@ -53,6 +53,13 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT NOT NULL,
             tipo TEXT NOT NULL
+        )
+    """)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS comandos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        acao TEXT,
+        arquivo TEXT
         )
     """)
 
@@ -165,6 +172,60 @@ def delete(id):
 def arquivo_grande(e):
     return "Arquivo maior que 500 MB.", 413
 
+@app.route("/play/<int:id>")
+def play(id):
+
+    conn = sqlite3.connect("banco.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT nome FROM arquivos WHERE id=?",
+        (id,)
+    )
+
+    arquivo = cursor.fetchone()
+
+    if arquivo:
+
+        cursor.execute("DELETE FROM comandos")
+
+        cursor.execute(
+            "INSERT INTO comandos (acao, arquivo) VALUES (?, ?)",
+            ("play", arquivo[0])
+        )
+
+        conn.commit()
+
+    conn.close()
+
+    flash("Comando enviado para a TV.")
+
+    return redirect("/")
+
+@app.route("/api/comando")
+def api_comando():
+
+    conn = sqlite3.connect("banco.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT acao, arquivo FROM comandos ORDER BY id DESC LIMIT 1"
+    )
+
+    comando = cursor.fetchone()
+
+    conn.close()
+
+    if comando:
+
+        return jsonify({
+            "acao": comando[0],
+            "arquivo": comando[1]
+        })
+
+    return jsonify({
+        "acao": "nenhuma"
+    })
 
 if __name__ == "__main__":
 

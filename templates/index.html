@@ -27,14 +27,23 @@
 <ul>
 {% for arquivo in arquivos %}
 
-    <li>
-        {{ arquivo[1] }}
-        ({{ arquivo[2] }})
+<li>
 
-        <a href="/delete/{{ arquivo[0] }}">
-            Excluir
-        </a>
-    </li>
+    {{ arquivo[1] }}
+
+    ({{ arquivo[2] }})
+
+    <a href="/play/{{ arquivo[0] }}">
+        ▶ Reproduzir na TV
+    </a>
+
+    |
+
+    <a href="/delete/{{ arquivo[0] }}">
+        Excluir
+    </a>
+
+</li>
 
 {% endfor %}
 </ul>
