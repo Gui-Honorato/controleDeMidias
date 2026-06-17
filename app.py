@@ -226,7 +226,13 @@ def api_comando():
             "acao": "nenhuma"
         })
 
+    acao = comando[0]
     arquivo = comando[1]
+
+    if acao == "stop":
+        return jsonify({
+            "acao": "stop"
+        })
 
     extensao = arquivo.rsplit(".", 1)[1].lower()
 
@@ -236,7 +242,7 @@ def api_comando():
         tipo = "imagem"
 
     return jsonify({
-        "acao": comando[0],
+        "acao": acao,
         "arquivo": arquivo,
         "tipo": tipo
     })
