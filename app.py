@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask import send_from_directory
 import sqlite3
 import os
+from telegram_service import enviar
 
 app = Flask(__name__)
 
@@ -439,6 +440,77 @@ def api_status():
     return jsonify({
         "status":"ok"
     })
+
+@app.route("/telegram/<int:id>")
+def telegram(id):
+
+    conn = sqlite3.connect("banco.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+
+        SELECT *
+
+        FROM dispositivos
+
+        WHERE id=?
+
+    """,(id,))
+
+    tv = cursor.fetchone()
+
+    conn.close()
+
+    if not tv:
+
+        flash("TV não encontrada.")
+
+        return redirect("/")
+
+    mensagem = f"""
+
+📺 {tv[1]}
+
+🟢 Status:
+{tv[2]}
+
+🎬 Arquivo:
+{tv[3]}
+
+⏱ Tempo ligado:
+{tv[4]}
+
+🌐 IP Local:
+{tv[5]}
+
+🚪 Gateway:
+{tv[6]}
+
+🌍 IP Público:
+{tv[7]}
+
+🧠 CPU:
+{tv[8]}%
+
+💾 RAM:
+{tv[9]}%
+
+📦 Disco:
+{tv[10]}%
+
+🖥 Resolução:
+{tv[12]}
+
+🆔 AnyDesk:
+{tv[11]}
+
+"""
+
+    enviar(mensagem)
+
+    flash("Informações enviadas ao Telegram.")
+
+    return redirect("/")
 
 if __name__ == "__main__":
 
