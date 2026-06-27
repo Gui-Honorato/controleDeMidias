@@ -108,12 +108,29 @@ def index():
     conn = sqlite3.connect("banco.db")
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM arquivos ORDER BY id DESC")
+    cursor.execute("""
+        SELECT *
+        FROM arquivos
+        ORDER BY id DESC
+    """)
+
     arquivos = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT *
+        FROM dispositivos
+        ORDER BY hostname
+    """)
+
+    dispositivos = cursor.fetchall()
 
     conn.close()
 
-    return render_template("index.html", arquivos=arquivos)
+    return render_template(
+        "index.html",
+        arquivos=arquivos,
+        dispositivos=dispositivos
+    )
 
 
 @app.route("/upload", methods=["POST"])

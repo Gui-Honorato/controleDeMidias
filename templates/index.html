@@ -7,6 +7,58 @@
 
 <body>
 
+<h2>TVs Conectadas</h2>
+
+{% if dispositivos %}
+
+    {% for tv in dispositivos %}
+
+    <div style="
+        border:1px solid #ccc;
+        border-radius:10px;
+        padding:15px;
+        margin-bottom:15px;
+        width:350px;
+    ">
+
+        <h3>📺 {{ tv[1] }}</h3>
+
+        {% if tv[2] == "online" %}
+
+            <p style="color:green;">
+                🟢 Online
+            </p>
+
+        {% else %}
+
+            <p style="color:red;">
+                🔴 Offline
+            </p>
+
+        {% endif %}
+
+        <b>Arquivo:</b><br>
+
+        {{ tv[3] if tv[3] else "Nenhum" }}
+
+        <br><br>
+
+        <form action="/telegram/{{ tv[0] }}">
+            <button>
+                📋 Mais Informações
+            </button>
+        </form>
+
+    </div>
+
+    {% endfor %}
+
+{% else %}
+
+<p>Nenhuma TV conectada.</p>
+
+{% endif %}
+
 <h1>Painel de Vídeos</h1>
 
 <form action="/upload" method="post" enctype="multipart/form-data">
