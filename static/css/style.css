@@ -1,0 +1,63 @@
+body{
+
+    background:#f5f7fb;
+
+}
+
+.navbar{
+
+    margin-bottom:20px;
+
+}
+
+.card{
+
+    border:none;
+
+    border-radius:15px;
+
+}
+
+.card-header{
+
+    background:white;
+
+    border-bottom:1px solid #ececec;
+
+}
+
+.tv-card{
+
+    background:#fafafa;
+
+    border-radius:12px;
+
+    border:1px solid #ddd;
+
+    padding:15px;
+
+    margin-bottom:15px;
+
+    transition:.2s;
+
+}
+
+.tv-card:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:0 0 15px rgba(0,0,0,.08);
+
+}
+
+.table td{
+
+    vertical-align:middle;
+
+}
+
+.btn{
+
+    border-radius:8px;
+
+}
