@@ -64,6 +64,40 @@ def init_db():
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS dispositivos (
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            hostname TEXT UNIQUE,
+
+            status TEXT,
+
+            arquivo TEXT,
+
+            uptime TEXT,
+
+            ip_local TEXT,
+
+            gateway TEXT,
+
+            ip_publico TEXT,
+
+            cpu REAL,
+
+            memoria REAL,
+
+            disco REAL,
+
+            anydesk TEXT,
+
+            resolucao TEXT,
+
+            ultima_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP
+
+            )
+        """)
+
     conn.commit()
     conn.close()
 
@@ -285,6 +319,109 @@ def stop():
     flash("Comando de parada enviado.")
 
     return redirect("/")
+
+@app.route("/api/status", methods=["POST"])
+def api_status():
+
+    dados = request.json
+
+    conn = sqlite3.connect("banco.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id
+        FROM dispositivos
+        WHERE hostname=?
+    """, (dados["hostname"],))
+
+    existe = cursor.fetchone()
+
+    if existe:
+
+        cursor.execute("""
+
+            UPDATE dispositivos
+
+            SET
+
+                status=?,
+                arquivo=?,
+                uptime=?,
+                ip_local=?,
+                gateway=?,
+                ip_publico=?,
+                cpu=?,
+                memoria=?,
+                disco=?,
+                anydesk=?,
+                resolucao=?,
+                ultima_atualizacao=CURRENT_TIMESTAMP
+
+            WHERE hostname=?
+
+        """, (
+
+            dados["status"],
+            dados["arquivo"],
+            dados["uptime"],
+            dados["ip_local"],
+            dados["gateway"],
+            dados["ip_publico"],
+            dados["cpu"],
+            dados["memoria"],
+            dados["disco"],
+            dados["anydesk"],
+            dados["resolucao"],
+            dados["hostname"]
+
+        ))
+
+    else:
+
+        cursor.execute("""
+
+            INSERT INTO dispositivos (
+
+                hostname,
+                status,
+                arquivo,
+                uptime,
+                ip_local,
+                gateway,
+                ip_publico,
+                cpu,
+                memoria,
+                disco,
+                anydesk,
+                resolucao
+
+            )
+
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+
+        """, (
+
+            dados["hostname"],
+            dados["status"],
+            dados["arquivo"],
+            dados["uptime"],
+            dados["ip_local"],
+            dados["gateway"],
+            dados["ip_publico"],
+            dados["cpu"],
+            dados["memoria"],
+            dados["disco"],
+            dados["anydesk"],
+            dados["resolucao"]
+
+        ))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "status":"ok"
+    })
 
 if __name__ == "__main__":
 
