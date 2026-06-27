@@ -6,7 +6,7 @@ import socket
 import psutil
 import json
 
-SERVIDOR = "http://IP_DO_SEU_SERVIDOR:5000"
+SERVIDOR = "http://127.0.0.1:5000"
 
 MEDIA_DIR = "media"
 
@@ -240,4 +240,4 @@ while True:
 
         print(e)
 
-    time.sleep(5)
+    time.sleep(1)
